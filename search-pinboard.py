@@ -10,26 +10,35 @@ def cleanup_result(x):
     # remove relative timestamp
     x.find('a'  , {'class': 'when'}).clear()
 
-def get_results(query: str):
+def get_bookmarks(query: str):
     query = quote(query)
     # TODO count total number of pages?
     # TODO query page 980?
 
-    soup = scrape(f'https://pinboard.in/search/?query={query}&all=Search+All')
-    results = soup.find_all('div', {'class': 'bookmark '})
+    soup = scrape(f'https://pinboard.in/search/?query={query}&all=Search+All') # TODO not sure about search all
+    bookmarks = soup.find_all('div', {'class': 'bookmark '})
 
-    for r in results:
-        cleanup_result(r)
-    return results
+    for b in bookmarks:
+        cleanup_result(b)
+    return bookmarks
 
 
 def main():
     import sys
-    what = sys.argv[1]
-    results = get_results(what)
+    queries = sys.argv[1:]
+    pages = [get_bookmarks(query) for query in queries]
+    results = []
+    for page in pages:
+        for r in page:
+            ss = r.prettify()
+            if ss in results:
+                continue # TODO maybe sort by time instead?..
+            else:
+                results.append(ss)
+
     for r in results:
         print("-----")
-        print(r.prettify())
+        print(r)
         print("-----")
 
 if __name__ == '__main__':
