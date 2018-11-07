@@ -11,19 +11,21 @@ class Result(NamedTuple):
     when: str
     link: str
     text: str
+    user: str
     tags: List[str]
 
 
     @property
     def repr(self):
-        return f"{self.when} {self.link}\n  {self.text}\n  {self.tags}"
+        return f"{self.when} {self.link}  | by {self.user}\n  {self.text}\n  {self.tags}" # TODO user link?...
 
 def extract_result(x) -> Result:
     when = x.find('a'  , {'class': 'when'}).get('title')
     link = x.find('a', {'class': 'bookmark_title'}).get('href')
     text = x.find('a', {'class': 'bookmark_title'}).text.strip()
+    user = [u.text for u in x.findAll('a') if u.get('href').startswith('/u:')][-1]
     tags = list(sorted([t.text for t in x.findAll('a', {'class': 'tag'})]))
-    return Result(when, link, text, tags)
+    return Result(when, link, text, user, tags)
 
 
 def get_bookmarks(query: str):
