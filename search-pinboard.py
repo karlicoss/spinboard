@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
+# pip3 install backoff
 
 # TODO make these automatic too?... generate kibitzr config before running from manual and non-manual bits
 
-from kython.scrape import scrape
 from urllib.parse import quote
 import logging
 import time
-
 from typing import NamedTuple, List
+
+import backoff  # type: ignore
+import requests
+
+from kython.scrape import scrape
+
 
 def get_logger():
     return logging.getLogger('pinboard-scraper')
@@ -42,7 +47,23 @@ def extract_result(x) -> Result:
     tags = list(sorted([t.text for t in x.findAll('a', {'class': 'tag'})]))
     return Result(uid, when, link, text, user, tags)
 
+def on_backoff(args=None, **kwargs):
+    logger = get_logger()
+    self = args[0]
+    self.logger.debug("Error! Backing off!")
 
+def hdlr(delegate):
+    def fun(details):
+        return delegate(**details)
+    return fun
+
+@backoff.on_exception(
+    backoff.expo,
+    requests.exceptions.Timeout, # TODO connectionerror?
+    max_tries=10,
+    jitter=backoff.random_jitter,
+    on_backoff=hdlr(on_backoff),
+)
 def fetch_results(query):
     furl = pinboard(query)
     soup = scrape(furl)
