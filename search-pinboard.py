@@ -4,8 +4,13 @@
 
 from kython.scrape import scrape
 from urllib.parse import quote
+import logging
+import time
 
 from typing import NamedTuple, List
+
+def get_logger():
+    return logging.getLogger('pinboard-scraper')
 
 def pinboard(rest):
     return 'https://pinboard.in' + rest
@@ -47,14 +52,19 @@ def fetch_results(query):
     return ([extract_result(b) for b in bookmarks], more_link)
 
 class PinboardSearch:
+    def __init__(self):
+        self.logger = get_logger()
+
     def by_(self, query: str, limit=1000):
         results = []
         # TODO should be set??
         more = query
         while more is not None and len(results) < limit: # TODO looks like it's givin back 20 bookmarks for tag search instead of 50 :(
+            self.logger.debug("querying %s", more)
             bunch, more = fetch_results(more)
             results.extend(bunch)
-        print(f"total results: {len(results)}")
+            time.sleep(1)
+        self.logger.debug("total results: %d", len(results))
         return results
 
     def by_tag(self, what: str, limit=1000):
@@ -64,6 +74,9 @@ class PinboardSearch:
         return self.by_(f'search/?query={query}&all=Search+All', limit=limit)
 
 def main():
+    logging.basicConfig(level=logging.INFO)
+    get_logger().setLevel(logging.DEBUG)
+
     import sys
     queries = sys.argv[1:]
     tags = []
