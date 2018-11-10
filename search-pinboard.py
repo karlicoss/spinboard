@@ -68,8 +68,9 @@ def fetch_results(query):
     furl = pinboard(query)
     soup = scrape(furl)
     bookmarks = soup.find_all('div', {'class': 'bookmark '})
-    more = soup.find_all('a', {'id': 'top_earlier'})
-    more_link = None if len(more) == 0 else more[0].get('href')
+    earlier = soup.find_all('a', text='« earlier')
+    # more = soup.find_all('a', {'id': 'top_earlier'})
+    more_link = None if len(earlier) == 0 else earlier[0].get('href')
     return ([extract_result(b) for b in bookmarks], more_link)
 
 class PinboardSearch:
@@ -92,7 +93,7 @@ class PinboardSearch:
         return self.by_(f'/t:{what}', limit=limit)
 
     def by_query(self, query: str, limit=1000):
-        return self.by_(f'search/?query={query}&all=Search+All', limit=limit)
+        return self.by_(f'/search/?query={query}&all=Search+All', limit=limit)
 
 def main():
     logging.basicConfig(level=logging.INFO)
