@@ -39,6 +39,11 @@ def main():
 
     rr = {}
     for r in results:
+        # TODO check if they are _exactly_ same? move it to library??
+        prev = rr.get(r.uid)
+        if prev is not None:
+            logger.debug('Duplicate entry with uid %s', r.uid)
+            assert prev == r
         rr[r.uid] = r
 
     rlist = sorted(rr.values(), key=lambda e: e.when, reverse=True)
@@ -54,3 +59,5 @@ if __name__ == '__main__':
 
 # TODO I guess should still could keep json states under kibitzr? but then post-process and go throught git history? not sure.
 # for starters, just collect jsons daily..
+
+# TODO merge results so they are unique? maybe store how did we find it as well; not sure if useful?
