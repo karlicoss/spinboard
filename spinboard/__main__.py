@@ -52,4 +52,5 @@ if __name__ == '__main__':
     main()
 
 
-# TODO parse datetime properly in when??
+# TODO I guess should still could keep json states under kibitzr? but then post-process and go throught git history? not sure.
+# for starters, just collect jsons daily..

@@ -63,6 +63,7 @@ def fetch_results(query):
 class Spinboard:
     def __init__(self):
         self.logger = get_logger()
+        self.delay_s = 1
 
     def by_(self, query: str, limit=1000):
         results: List[Result] = []
@@ -72,7 +73,7 @@ class Spinboard:
             self.logger.debug("querying %s", more)
             bunch, more = fetch_results(more)
             results.extend(bunch)
-            time.sleep(1)
+            time.sleep(self.delay_s)
         self.logger.debug("total results: %d", len(results))
         return results
 
