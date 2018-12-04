@@ -7,7 +7,8 @@ from spinboard import Spinboard, get_logger
 
 def main():
     logging.basicConfig(level=logging.INFO)
-    get_logger().setLevel(logging.DEBUG)
+    logger = get_logger()
+    logger.setLevel(logging.DEBUG)
 
     p = argparse.ArgumentParser()
     p.add_argument('--limit', type=int, default=1000)
@@ -43,7 +44,9 @@ def main():
         prev = rr.get(r.uid)
         if prev is not None:
             logger.debug('Duplicate entry with uid %s', r.uid)
-            assert prev == r
+            if not prev.same(r):
+                logger.error('Entries are not matching: %s vs %s', prev, r)
+                raise AssertionError
         rr[r.uid] = r
 
     rlist = sorted(rr.values(), key=lambda e: e.when, reverse=True)
@@ -52,6 +55,7 @@ def main():
     else:
         for r in rlist:
             print(r.repr)
+
 
 if __name__ == '__main__':
     main()

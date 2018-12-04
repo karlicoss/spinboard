@@ -42,4 +42,14 @@ class Result(NamedTuple):
         cp['when'] = datetime.strptime(cp['when'], '%Y%m%d%H%M%S')
         return Result(**cp)
 
+    @property
+    def _key(self):
+        rr = self._asdict()
+        del rr['description']
+        return rr
+
+    def same(self, other: 'Result') -> bool:
+        # ugh, sometimes description is not matching since it depends on where we got the result from...
+        return self._key == other._key
+
 # TODO assert list of names here??
