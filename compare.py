@@ -69,37 +69,38 @@ def diffference(before, after):
             raise AssertionError
     return removed, added
 
+class Collector:
+    def __init__(self):
+        self.items = {}
+
+    def register(self, batch):
+        added = []
+        for i in batch:
+            if i.uid in self.items:
+                pass # TODO FIXME compare? if description or tags changed, report it?
+            else:
+                added.append(i)
+                self.items[i.uid] = i
+        return added
+
 def print_all_diffs(repo: str):
     from pprint import pprint
     rh = RepoHandle(repo)
+    cc = Collector()
     jsons = rh.get_all_versions()
-    for bef, aft in zip(jsons, jsons[1:]):
-        revb, befj = bef
-        reva, aftj = aft
-
-        rem, add = diffference(list(map(Result.from_json, befj)), list(map(Result.from_json, aftj)))
-        # dd = DeepDiff(bef, aft, ignore_order=True)
-
-        # TODO ignore removed??
-        # TODO changed??
-        # added = d
-        # iterable_item_added
-        print(f'revision {revb}->{reva}: total {len(aftj)}, removed {len(rem)}, added {len(add)}')
-        if len(rem) > 0:
-            print('removed')
-            for r in sorted(rem, key=lambda r: r.uid):
-                print('  ' + str(r.uid))
-        if len(add) > 0:
+    for jj in jsons:
+        rev, j = jj
+        items = list(map(Result.from_json, j))
+        added = cc.register(items)
+        print(f'revision {rev}: total {len(cc.items)}')
+        if len(added) > 0:
             print('added')
-            for r in sorted(add, key=lambda r: r.uid):
+            for r in sorted(added, key=lambda r: r.uid):
                 print('  ' + str(r.uid))
-        # pprint(rem)
-        # pprint(add)
-
-
-        # TODO search is a bit of flaky: initially I was getting
-        # so like exact opposites
-        # I guess removed links are basically not interesting, so we want to track whatever new was added
+                
+# TODO search is a bit of flaky: initially I was getting
+# so like exact opposites
+# I guess removed links are basically not interesting, so we want to track whatever new was added
 """
 revision 7da4116->d20b6d2: total 755, removed 26, added 24
 removed
