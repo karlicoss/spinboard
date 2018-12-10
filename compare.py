@@ -104,7 +104,7 @@ tags: {' '.join(r.tags)}
 
 
 # TODO html mode??
-def print_all_diffs(repo: str, count=300):
+def get_digest(repo: str, count=300):
     rh = RepoHandle(repo)
     cc = Collector()
     jsons = rh.get_all_versions()
@@ -131,8 +131,8 @@ def print_all_diffs(repo: str, count=300):
 #                # TODO I guess keep latest revision in a state??
 #                print(BB)
                 
-    for x in islice(reversed(all_added), 0, count):
-        print(x)
+    latest = islice(reversed(all_added), 0, count)
+    return '\n'.join(latest)
 
 # TODO search is a bit of flaky: initially I was getting
 # so like exact opposites
@@ -246,6 +246,21 @@ added
   /u:urbansheep/b:e7a9c4876ab0
 """
 
+import requests
+def send(subject: str, body: str):
+    return requests.post(
+        "https://api.mailgun.net/v3/***REMOVED***/messages",
+        auth=(
+            "api",
+            "***REMOVED***" # TODO secrets..
+        ),
+        data={"from": "spinboard <mailgun@***REMOVED***>",
+              "to": ["karlicoss@gmail.com"],
+              "subject": f"Spinboard stats for {subject}",
+              "text": body,
+        }
+    )
+
 
 # TODO for starters, just send last few days digest..
 def main():
@@ -260,7 +275,13 @@ def main():
     # TODO utc timestamp??
     # tos = args.to
     # TODO strptime?
-    print_all_diffs(repo, count=300)
+    digest = get_digest(repo, count=300)
+    res = send(
+        subject=repo,
+        body=digest,
+    )
+    res.raise_for_status()
+
 
 
 if __name__ == '__main__':
