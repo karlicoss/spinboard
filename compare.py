@@ -83,6 +83,12 @@ class Collector:
                 self.items[i.uid] = i
         return added
 
+def tabulate(text: str):
+    if text is None:
+        return "   "
+    return '\n'.join('   ' + t for t in text.splitlines())
+
+# TODO html mode??
 def print_all_diffs(repo: str):
     from pprint import pprint
     rh = RepoHandle(repo)
@@ -96,7 +102,19 @@ def print_all_diffs(repo: str):
         if len(added) > 0:
             print('added')
             for r in sorted(added, key=lambda r: r.uid):
-                print('  ' + str(r.uid))
+                # TODO link to bookmark
+                # TODO actually chould even generate html here...
+                # TODO highlight interesting users
+                # TODO how to track which ones were already notified??
+                # TODO I guess keep latest revision in a state??
+                BB = f""">>>>>>>>>
+{r.title}  {r.link}
+{tabulate(r.description)}
+tags: {' '.join(r.tags)}
+{r.when} by {r.user} {r.blink}
+<<<<<<<<<
+"""
+                print(BB)
                 
 # TODO search is a bit of flaky: initially I was getting
 # so like exact opposites
