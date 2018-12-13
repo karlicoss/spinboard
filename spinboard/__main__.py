@@ -21,35 +21,8 @@ def main():
 
     assert len(queries) > 0
 
-    tags = []
-    rest = []
-    for q in queries:
-        if q.startswith('tag:'):
-            tags.append(q[len('tag:'):])
-        else:
-            rest.append(q)
-
     psearch = Spinboard()
-
-    results = []
-    for tag in tags:
-        results.extend(psearch.by_tag(tag, limit=limit))
-
-    for query in rest:
-        results.extend(psearch.by_query(query, limit=limit))
-
-    rr = {}
-    for r in results:
-        # TODO check if they are _exactly_ same? move it to library??
-        prev = rr.get(r.uid)
-        if prev is not None:
-            logger.debug('Duplicate entry with uid %s', r.uid)
-            if not prev.same(r):
-                logger.error('Entries are not matching: %s vs %s', prev, r)
-                raise AssertionError
-        rr[r.uid] = r
-
-    rlist = sorted(rr.values(), key=lambda e: e.when, reverse=True)
+    rlist = psearch.search_all(queries)
     if args.json:
         json.dump([r.json for r in rlist], sys.stdout, ensure_ascii=False, indent=1, sort_keys=True)
     else:

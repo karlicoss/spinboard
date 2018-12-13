@@ -6,7 +6,7 @@ def pinboard(rest):
     return 'https://pinboard.in' + rest
 
 def get_logger():
-    return logging.getLogger('pinboard-scraper')
+    return logging.getLogger('spinboard')
 
 class Result(NamedTuple):
     uid: str

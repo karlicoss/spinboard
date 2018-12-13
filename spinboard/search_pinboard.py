@@ -3,7 +3,7 @@
 from datetime import datetime
 from urllib.parse import quote
 import time
-from typing import NamedTuple, List
+from typing import NamedTuple, List, Dict
 
 import backoff  # type: ignore
 import requests
@@ -65,7 +65,10 @@ class Spinboard:
         self.logger = get_logger()
         self.delay_s = 1
 
-    def by_(self, query: str, limit=1000):
+    def by_(self, query: str, limit=None) -> List[Result]:
+        if limit is None:
+            limit = 1000
+
         results: List[Result] = []
         # TODO should be set??
         more = query
@@ -77,9 +80,33 @@ class Spinboard:
         self.logger.debug("total results: %d", len(results))
         return results
 
-    def by_tag(self, what: str, limit=1000):
+    def by_tag(self, what: str, limit=None) -> List[Result]:
         return self.by_(f'/t:{what}', limit=limit)
 
-    def by_query(self, query: str, limit=1000):
+    def by_query(self, query: str, limit=None) -> List[Result]:
         return self.by_(f'/search/?query={query}&all=Search+All', limit=limit)
 
+    def search(self, query: str, limit=None) -> List[Result]:
+        if query.startswith('tag:'):
+            tt = query[len('tag:'):]
+            return self.by_tag(tt, limit=limit)
+        else:
+            return self.by_query(query, limit=limit)
+
+    def search_all(self, queries: List[str], limit=None) -> List[Result]:
+        results: List[Result] = []
+        for query in queries:
+            results.extend(self.search(query, limit=limit))
+
+        rr: Dict[str, Result] = {}
+        for r in results:
+            # TODO check if they are _exactly_ same? move it to library??
+            prev = rr.get(r.uid)
+            if prev is not None:
+                self.logger.debug('Duplicate entry with uid %s', r.uid)
+                if not prev.same(r):
+                    self.logger.error('Entries are not matching: %s vs %s', prev, r)
+                    raise AssertionError
+            rr[r.uid] = r
+        rlist = sorted(rr.values(), key=lambda e: e.when, reverse=True)
+        return rlist
