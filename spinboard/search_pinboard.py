@@ -3,7 +3,9 @@
 from datetime import datetime
 from urllib.parse import quote
 import time
+import re
 from typing import NamedTuple, List, Dict
+import urllib.parse
 
 import backoff  # type: ignore
 import requests
@@ -54,11 +56,20 @@ def hdlr(delegate):
 def fetch_results(query):
     furl = pinboard(query)
     soup = scrape(furl)
+
+    total = None
+    qq = soup.find('div', {'id': 'bookmarks'})
+    if qq is not None:
+        for ww in qq.find_all('p'):
+            mm = re.search(r'Found\s*(\d+)\s*results', ww.text)
+            if mm is not None:
+                total = int(mm.group(1))
+                break
     bookmarks = soup.find_all('div', {'class': 'bookmark '})
     earlier = soup.find_all('a', text='« earlier')
     # more = soup.find_all('a', {'id': 'top_earlier'})
     more_link = None if len(earlier) == 0 else earlier[0].get('href')
-    return ([extract_result(b) for b in bookmarks], more_link)
+    return (total, [extract_result(b) for b in bookmarks], more_link)
 
 class Spinboard:
     def __init__(self):
@@ -69,22 +80,25 @@ class Spinboard:
         if limit is None:
             limit = 1000
 
+        total = None
         results: List[Result] = []
         # TODO should be set??
         more = query
         while more is not None and len(results) < limit: # TODO looks like it's givin back 20 bookmarks for tag search instead of 50 :(
             self.logger.debug("querying %s", more)
-            bunch, more = fetch_results(more)
+            tot, bunch, more = fetch_results(more)
+            total = tot
             results.extend(bunch)
             time.sleep(self.delay_s)
-        self.logger.debug("total results: %d", len(results))
+        self.logger.debug("total results: %d, expected %d", len(results), tot)
         return results
 
     def by_tag(self, what: str, limit=None) -> List[Result]:
         return self.by_(f'/t:{what}', limit=limit)
 
     def by_query(self, query: str, limit=None) -> List[Result]:
-        return self.by_(f'/search/?query={query}&all=Search+All', limit=limit)
+        q = urllib.parse.quote_plus(query)
+        return self.by_(f'/search/?query={q}&all=Search+All', limit=limit)
 
     def search(self, query: str, limit=None) -> List[Result]:
         if query.startswith('tag:'):
