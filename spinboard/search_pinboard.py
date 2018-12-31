@@ -57,6 +57,7 @@ def fetch_results(query):
     furl = pinboard(query)
     soup = scrape(furl)
 
+    # TODO also: <span class="bookmark_count">29</span>
     total = None
     qq = soup.find('div', {'id': 'bookmarks'})
     if qq is not None:
@@ -90,7 +91,7 @@ class Spinboard:
             total = tot
             results.extend(bunch)
             time.sleep(self.delay_s)
-        self.logger.debug("total results: %d, expected %d", len(results), tot)
+        self.logger.debug("total results: %d, expected %s", len(results), tot)
         return results
 
     def by_tag(self, what: str, limit=None) -> List[Result]:

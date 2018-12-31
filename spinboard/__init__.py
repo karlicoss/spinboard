@@ -1,2 +1,2 @@
-from .common import get_logger
+from .common import get_logger, Result
 from .search_pinboard import Spinboard
