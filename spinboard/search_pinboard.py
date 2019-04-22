@@ -75,7 +75,7 @@ def fetch_results(query):
 class Spinboard:
     def __init__(self):
         self.logger = get_logger()
-        self.delay_s = 1
+        self.delay_s = 5
 
     def by_(self, query: str, limit=None) -> List[Result]:
         if limit is None:

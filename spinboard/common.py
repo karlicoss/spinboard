@@ -18,6 +18,10 @@ class Result(NamedTuple):
     tags: List[str]
 
     @property
+    def ntags(self) -> List[str]:
+        return list(sorted({t.lower() for t in self.tags}))
+
+    @property
     def repr(self):
         return f"{self.when} {self.link}  | by {self.user}\n  {self.title}\n  {self.tags}" # TODO user link?...
 
@@ -27,6 +31,7 @@ class Result(NamedTuple):
 
     @property
     def _key(self):
+        # pylint: disable=no-member
         rr = self._asdict()
         del rr['description']
         return rr

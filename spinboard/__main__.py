@@ -24,7 +24,8 @@ def main():
     psearch = Spinboard()
     rlist = psearch.search_all(queries)
     if args.json:
-        json.dump([r.json for r in rlist], sys.stdout, ensure_ascii=False, indent=1, sort_keys=True)
+        raise RuntimeError('json mode is broken apparently?')
+        # json.dump([r.json for r in rlist], sys.stdout, ensure_ascii=False, indent=1, sort_keys=True)
     else:
         for r in rlist:
             print(r.repr)
