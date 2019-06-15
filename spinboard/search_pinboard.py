@@ -4,7 +4,7 @@ from datetime import datetime
 from urllib.parse import quote
 import time
 import re
-from typing import NamedTuple, List, Dict
+from typing import NamedTuple, List, Dict, Iterator
 import urllib.parse
 
 import backoff  # type: ignore
@@ -66,7 +66,7 @@ def fetch_results(query):
             if mm is not None:
                 total = int(mm.group(1))
                 break
-    bookmarks = soup.find_all('div', {'class': 'bookmark '})
+    bookmarks = soup.find_all('div', {'class': 'display'})
     earlier = soup.find_all('a', text='« earlier')
     # more = soup.find_all('a', {'id': 'top_earlier'})
     more_link = None if len(earlier) == 0 else earlier[0].get('href')
@@ -77,29 +77,37 @@ class Spinboard:
         self.logger = get_logger()
         self.delay_s = 5
 
-    def by_(self, query: str, limit=None) -> List[Result]:
+    def by_(self, query: str, limit=None) -> Iterator[Result]:
         if limit is None:
+            self.logger.info('defaulting limit to 1000')
             limit = 1000
 
         total = None
-        results: List[Result] = []
-        # TODO should be set??
+        fetched = 0
+
+        # TODO should make them unique via set?
         more = query
-        while more is not None and len(results) < limit: # TODO looks like it's givin back 20 bookmarks for tag search instead of 50 :(
+        while more is not None and fetched < limit: # TODO looks like it's givin back 20 bookmarks for tag search instead of 50 :(
             self.logger.debug("querying %s", more)
             tot, bunch, more = fetch_results(more)
             total = tot
-            results.extend(bunch)
+            yield from bunch
+            fetched += len(bunch)
             time.sleep(self.delay_s)
-        self.logger.debug("total results: %d, expected %s", len(results), tot)
-        return results
+        self.logger.debug("total results: %d, expected %s", fetched, tot)
 
-    def by_tag(self, what: str, limit=None) -> List[Result]:
+    def iter_by_tag(self, what: str, limit=None) -> Iterator[Result]:
         return self.by_(f'/t:{what}', limit=limit)
 
-    def by_query(self, query: str, limit=None) -> List[Result]:
+    def by_tag(self, what: str, limit=None) -> List[Result]:
+        return list(self.by_tag(what=what, limit=limit))
+
+    def iter_by_query(self, query: str, limit=None) -> Iterator[Result]:
         q = urllib.parse.quote_plus(query)
         return self.by_(f'/search/?query={q}&all=Search+All', limit=limit)
+
+    def by_query(self, query: str, limit=None) -> List[Result]:
+        return list(self.iter_by_query(query=query, limit=limit))
 
     def search(self, query: str, limit=None) -> List[Result]:
         if query.startswith('tag:'):
