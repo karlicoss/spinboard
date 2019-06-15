@@ -15,6 +15,9 @@ from kython.scrape import scrape
 from .common import get_logger, Result, pinboard
 
 def extract_result(x) -> Result:
+    # TODO hmm. could extract from JS?
+    # var bmarks={};
+    # bmarks[1134487226] = {"id":"1134487226","url":"https:\/\/pinboard.in\/u:hannahphi\/","url_id":"311762905","author":"deaduncledave","created":"2019-06-15 13:22:37","description":"","title":"Pinboard: public bookmarks for hannahphi","slug":"91677a0fc3b2","toread":"0","cached":null,"code":null,"private":"0","user_id":"189277","snapshot_id":null,"updated":"2019-06-15 13:22:37","in_collection":null,"sertags":",Hannah,food,recipes,database,","source":"9","tags":["Hannah","food","recipes","database"],"author_id":"189277","u
     wh = x.find('a'  , {'class': 'when'})
     uid  = wh.get('href')
     whens = wh.get('title').replace('\xa0', '')
@@ -59,6 +62,7 @@ def fetch_results(query):
 
     # TODO also: <span class="bookmark_count">29</span>
     total = None
+    # TODO total detection is a bit broken... wonder if I need to change user agent?
     qq = soup.find('div', {'id': 'bookmarks'})
     if qq is not None:
         for ww in qq.find_all('p'):
@@ -66,7 +70,7 @@ def fetch_results(query):
             if mm is not None:
                 total = int(mm.group(1))
                 break
-    bookmarks = soup.find_all('div', {'class': 'display'})
+    bookmarks = soup.find_all('div', {'class': 'display'}) # TODO maybe search for parent of bookmark title?
     earlier = soup.find_all('a', text='« earlier')
     # more = soup.find_all('a', {'id': 'top_earlier'})
     more_link = None if len(earlier) == 0 else earlier[0].get('href')
