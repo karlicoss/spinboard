@@ -104,7 +104,7 @@ class Spinboard:
         return self.by_(f'/t:{what}', limit=limit)
 
     def by_tag(self, what: str, limit=None) -> List[Result]:
-        return list(self.by_tag(what=what, limit=limit))
+        return list(self.iter_by_tag(what=what, limit=limit))
 
     def iter_by_query(self, query: str, limit=None) -> Iterator[Result]:
         q = urllib.parse.quote_plus(query)
