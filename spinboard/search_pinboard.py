@@ -57,6 +57,8 @@ def hdlr(delegate):
     on_backoff=hdlr(on_backoff),
 )
 def fetch_results(query):
+    logger = get_logger()
+
     furl = pinboard(query)
     soup = scrape(furl)
 
@@ -64,6 +66,11 @@ def fetch_results(query):
     total = None
     # TODO total detection is a bit broken... wonder if I need to change user agent?
     qq = soup.find('div', {'id': 'bookmarks'})
+
+    if re.search(r'connection.*failed', str(qq), re.MULTILINE):
+        logger.warning('looks like pinboard is broken :(')
+        logger.warning(str(qq))
+
     if qq is not None:
         for ww in qq.find_all('p'):
             mm = re.search(r'Found\s*(\d+)\s*results', ww.text)
