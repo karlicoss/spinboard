@@ -1,0 +1,15 @@
+#!/bin/bash -eux
+
+cd "$(dirname "$0")"
+
+function run_mypy {
+    # TODO pretty errors etc?
+    mypy --namespace-packages --check-untyped "$@"
+}
+
+function run_pylint {
+    pylint -E "$@"
+}
+
+run_mypy   spinboard
+run_pylint spinboard
