@@ -10,9 +10,8 @@ import urllib.parse
 import backoff  # type: ignore
 import requests
 
-from kython.scrape import scrape
-
 from .common import get_logger, Result, pinboard
+
 
 def extract_result(x) -> Result:
     # TODO hmm. could extract from JS?
@@ -39,6 +38,14 @@ def extract_result(x) -> Result:
         tags=tags,
     )
 
+
+def scrape(url: str):
+    from bs4 import BeautifulSoup # type: ignore
+    data = requests.get(url).text
+    soup = BeautifulSoup(data, "html.parser")
+    return soup
+
+
 def on_backoff(args=None, **kwargs):
     logger = get_logger()
     self = args[0]
@@ -48,6 +55,7 @@ def hdlr(delegate):
     def fun(details):
         return delegate(**details)
     return fun
+
 
 @backoff.on_exception(
     backoff.expo,

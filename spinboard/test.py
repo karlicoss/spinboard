@@ -2,12 +2,10 @@ import logging
 
 from spinboard import Spinboard, get_logger
 
-from kython.klogging import setup_logzero
-
 
 def setup():
-    setup_logzero(logging.getLogger('backoff'), level=logging.DEBUG)
-    setup_logzero(get_logger(), level=logging.DEBUG)
+    # TODO how to enable logging properly?..
+    logging.basicConfig(level=logging.DEBUG)
 
 
 def test_query():
